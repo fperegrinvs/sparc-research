@@ -1,40 +1,20 @@
-# Tester Agent
+# Part 13: Testing Strategy for AI-Generated Code
 
-## Role
-Quality assurance through **specification-driven** testing that validates behavior, not implementation.
+## Overview
 
-## Core Philosophy
+Testing AI-generated code requires a multi-layered approach that verifies behavior without coupling to implementation details. The key insight: **test WHAT the system does, not HOW it does it**.
 
-> "Tests should verify WHAT the system does, not HOW it does it internally."
+## Beyond the Pyramid: Modern Testing Shapes
 
-A good test:
-- Survives refactoring (if behavior unchanged)
-- Documents a specification
-- Is understandable by stakeholders
-- Validates observable outcomes
+The traditional testing pyramid emphasizes unit test volume, but modern strategies recognize that **integration tests provide optimal confidence-per-effort** for AI-generated code.
 
-A bad test:
-- Breaks when internals change
-- Asserts on method call counts
-- Couples to implementation details
-- Requires understanding code internals
+**Testing Trophy** (Kent C. Dodds): Static analysis foundation, integration tests primary, unit tests for complex logic only.
 
-## Responsibilities
+**Testing Honeycomb** (Spotify): The microservice IS the unit. Integration tests validate through edges (API, database). Some services have zero implementation-detail tests.
 
-1. **Define invariants** (property-based tests)
-2. **Write executable specifications** (BDD/Gherkin)
-3. **Validate behavior through ports** (black-box testing)
-4. **Create and maintain fakes** (NOT mocks for domain)
-5. **Ensure contract compliance** (fake vs real validation)
+**Testing Diamond**: Integration tests widest, unit tests only for parsing, calculations, complex transformations.
 
-## Tools Allowed
-- Read, Glob, Grep (code and test exploration)
-- Write, Edit (test file modification)
-- Bash (run tests, coverage reports)
-
-## Testing Strategy: Integration-First (Diamond/Honeycomb)
-
-Modern testing shapes emphasize **integration tests over unit tests**. The pyramid is outdated.
+### Recommended Shape for AI-Generated Code
 
 ```
           ╱╲            E2E: Critical paths only (minimize)
@@ -43,21 +23,24 @@ Modern testing shapes emphasize **integration tests over unit tests**. The pyram
        ╱──────╲
       ╱        ╲        Integration: Test through ports
      ╱ ════════ ╲       ← WIDEST LAYER (fakes AND real)
-    ╱            ╲      Property: Domain invariants
+    ╱            ╲      Property Tests: Domain invariants
    ╱──────────────╲
-  ╱                ╲    Unit: Complex algorithms ONLY
+  ╱                ╲    Unit: Complex algorithms only
  ╱                  ╲
 ```
 
 **Key insight**: Minimize tests that lock in implementation details, maximize tests that validate observable behavior.
 
-## Test Layers
+## Layer 1: Property-Based Tests
 
-### 1. Property Tests (Foundation)
 Define invariants that must hold for ALL inputs.
 
-**Location**: `tests/properties/`
+### Purpose
+- Catch edge cases humans miss
+- Define domain rules mathematically
+- Generate thousands of test cases automatically
 
+### Example
 ```typescript
 import { test, fc } from '@fast-check/vitest'
 
@@ -68,20 +51,45 @@ test.prop([fc.array(orderItemArbitrary)])
     expect(order.total).toBeGreaterThanOrEqual(0)
   })
 
-// Symmetry property
+// Round-trip property
 test.prop([userArbitrary])
   ('user serialization round-trip', (user) => {
     const serialized = serializeUser(user)
     const deserialized = deserializeUser(serialized)
     expect(deserialized).toEqual(user)
   })
+
+// Commutativity
+test.prop([fc.array(fc.integer()), fc.array(fc.integer())])
+  ('set union is commutative', (a, b) => {
+    const setA = new Set(a)
+    const setB = new Set(b)
+    expect(union(setA, setB)).toEqual(union(setB, setA))
+  })
 ```
 
-### 2. Black-Box Unit Tests (Domain Logic)
-Test domain use cases through ports using FAKES.
+### Custom Arbitraries
+```typescript
+const userArbitrary = fc.record({
+  id: fc.uuid(),
+  email: fc.emailAddress(),
+  firstName: fc.string({ minLength: 1, maxLength: 50 }),
+  age: fc.integer({ min: 0, max: 150 }),
+  role: fc.constantFrom('admin', 'user', 'guest')
+})
 
-**Location**: `tests/unit/`
+const orderItemArbitrary = fc.record({
+  productId: fc.uuid(),
+  price: fc.integer({ min: 1, max: 1000000 }), // cents
+  quantity: fc.integer({ min: 1, max: 100 })
+})
+```
 
+## Layer 2: Black-Box Unit Tests
+
+Test domain logic through ports using fakes.
+
+### Key Principle
 ```typescript
 // GOOD: Tests behavior through ports with fakes
 describe('RegisterUser', () => {
@@ -103,24 +111,10 @@ describe('RegisterUser', () => {
     const found = await deps.userRepository.findByEmail('new@example.com')
     expect(found).not.toBeNull()
   })
-
-  it('rejects duplicate email', async () => {
-    // First registration
-    await registerUser({ email: 'taken@example.com', password: 'Pass123!' }, deps)
-
-    // Second registration should fail
-    const result = await registerUser({
-      email: 'taken@example.com',
-      password: 'DifferentPass456!'
-    }, deps)
-
-    expect(result.isErr()).toBe(true)
-    expect(result.error.type).toBe('CONFLICT')
-  })
 })
 ```
 
-**AVOID**: Mock-based interaction testing
+### Anti-Pattern
 ```typescript
 // BAD: Tests implementation, not behavior
 it('calls repository and hasher', async () => {
@@ -135,13 +129,12 @@ it('calls repository and hasher', async () => {
 })
 ```
 
-### 3. Contract Tests (Fake Validation)
+## Layer 3: Contract Tests
+
 Ensure fakes behave like real implementations.
 
-**Location**: `tests/contracts/`
-
+### Contract Definition
 ```typescript
-// Same tests run against BOTH fake and real
 function userRepositoryContract(
   createRepo: () => UserRepository,
   cleanup: () => Promise<void>
@@ -167,8 +160,11 @@ function userRepositoryContract(
     })
   })
 }
+```
 
-// Apply contract to fake
+### Apply to Both Fake and Real
+```typescript
+// Run against fake
 describe('InMemoryUserRepository', () => {
   userRepositoryContract(
     () => createInMemoryUserRepository(),
@@ -176,7 +172,7 @@ describe('InMemoryUserRepository', () => {
   )
 })
 
-// Apply contract to real
+// Run against real (integration test)
 describe('PostgresUserRepository', () => {
   userRepositoryContract(
     () => new PostgresUserRepository(testDb),
@@ -185,11 +181,11 @@ describe('PostgresUserRepository', () => {
 })
 ```
 
-### 4. BDD Feature Tests (Acceptance)
+## Layer 4: BDD Feature Tests
+
 Executable specifications in Gherkin.
 
-**Location**: `tests/features/`
-
+### Gherkin Example
 ```gherkin
 Feature: User Registration
   As a new visitor
@@ -208,13 +204,39 @@ Feature: User Registration
     Then registration should fail with "Email already registered"
 ```
 
-### 5. E2E Tests (Critical Paths Only)
-Full system tests for "money paths" only.
-
-**Location**: `tests/e2e/`
-
+### Step Definitions
 ```typescript
-// Only test critical user journeys
+Given('no account exists for {string}', async function(email: string) {
+  // Verify user doesn't exist (using fake)
+  const existing = await this.deps.userRepository.findByEmail(email)
+  expect(existing).toBeNull()
+})
+
+When('Alice registers with email {string} and password {string}', async function(
+  email: string,
+  password: string
+) {
+  this.result = await registerUser({ email, password }, this.deps)
+})
+
+Then('Alice should have an active account', async function() {
+  expect(this.result.isOk()).toBe(true)
+  const user = await this.deps.userRepository.findByEmail('alice@example.com')
+  expect(user?.status).toBe('active')
+})
+```
+
+## Layer 5: E2E Tests
+
+Critical user journeys only.
+
+### Purpose
+- Verify complete system integration
+- Test "money paths" (critical business flows)
+- Keep minimal to avoid flakiness
+
+### Example
+```typescript
 describe('E2E: Checkout Flow', () => {
   it('completes purchase with valid payment', async () => {
     // Setup
@@ -231,17 +253,16 @@ describe('E2E: Checkout Flow', () => {
 })
 ```
 
-## Test Double Guidelines
+## Test Doubles Strategy
 
-| Type | When to Use | Example |
-|------|-------------|---------|
-| **Fake** | Domain dependency testing | In-memory repository |
-| **Stub** | Isolating external services | Fixed API response |
-| **Mock** | Adapter boundary ONLY | Verify HTTP call made |
+| Double | Use When | Example |
+|--------|----------|---------|
+| **Fake** | Testing domain logic | In-memory repository |
+| **Stub** | Isolating from slow/flaky services | Hardcoded API response |
+| **Mock** | Verifying adapter boundaries ONLY | HTTP client called external API |
 
 ### Creating Good Fakes
 ```typescript
-// Fake that behaves like real implementation
 export function createInMemoryUserRepository(): UserRepository {
   const users = new Map<string, User>()
 
@@ -271,24 +292,26 @@ export function createInMemoryUserRepository(): UserRepository {
 }
 ```
 
-## Mocks: ONLY at Adapter Boundaries
+## Test Organization
 
-```typescript
-// ACCEPTABLE: Verify adapter calls external API correctly
-describe('StripePaymentAdapter', () => {
-  it('sends correct payload to Stripe', async () => {
-    const mockHttp = { post: vi.fn().mockResolvedValue({ id: 'ch_123' }) }
-    const adapter = new StripePaymentAdapter(mockHttp)
-
-    await adapter.charge({ amount: 1000, currency: 'usd' })
-
-    // Verifying external API translation IS appropriate here
-    expect(mockHttp.post).toHaveBeenCalledWith(
-      'https://api.stripe.com/v1/charges',
-      expect.objectContaining({ amount: 1000 })
-    )
-  })
-})
+```
+tests/
+├── properties/              # Property-based invariant tests
+│   ├── order-invariants.test.ts
+│   └── user-invariants.test.ts
+├── unit/                    # Black-box domain tests (fakes)
+│   └── use-cases/
+│       └── register-user.test.ts
+├── contracts/               # Fake vs Real validation
+│   └── user-repository.contract.ts
+├── features/                # BDD Gherkin scenarios
+│   ├── auth.feature
+│   └── steps/
+│       └── auth.steps.ts
+├── integration/             # Real adapter tests
+│   └── db/
+└── e2e/                     # Critical user journeys
+    └── checkout.test.ts
 ```
 
 ## Coverage Targets
@@ -301,57 +324,11 @@ describe('StripePaymentAdapter', () => {
 | Contract tests | All fakes validated | Fake == Real behavior |
 | E2E tests | Critical paths only | ~10 scenarios max |
 
-## Test Checklist
+## Checklist: Is This Test Good?
 
-Before marking tests complete:
-
-- [ ] Do tests verify BEHAVIOR, not implementation?
-- [ ] Would tests survive internal refactoring?
-- [ ] Are fakes used instead of mocks for domain?
-- [ ] Are fakes validated with contract tests?
-- [ ] Are property tests defining domain invariants?
-- [ ] Are BDD scenarios stakeholder-readable?
-- [ ] Do tests document specifications?
-
-## Advanced Testing Techniques
-
-### Metamorphic Testing (For Oracle-Free Scenarios)
-When you can't easily determine expected output, test RELATIONSHIPS between inputs and outputs.
-
-**Use Cases**:
-- Complex algorithms (ML, optimization)
-- Search/ranking systems
-- AI-generated code validation
-
-**See**: `.claude/skills/metamorphic-testing.md` for detailed patterns.
-
-```typescript
-// Example: Metamorphic relation for search
-test('more specific query returns subset', async () => {
-  const broad = await search('shoes')
-  const specific = await search('shoes red leather')
-
-  // Every specific result should appear in broad results
-  specific.forEach(result => {
-    expect(broad).toContainEqual(result)
-  })
-})
-```
-
-## Related Skills
-- `property-testing` - Domain invariants with fast-check
-- `bdd-testing` - Gherkin/Cucumber specifications
-- `metamorphic-testing` - Testing without oracle
-- `tdd-workflow` - Specification-driven testing philosophy
-
-## Commands
-
-```bash
-bun test                    # All tests
-bun test:properties         # Property-based tests
-bun test:unit               # Black-box unit tests
-bun test:contracts          # Contract validation
-bun test:features           # BDD scenarios
-bun test:e2e                # E2E critical paths
-bun test:coverage           # Coverage report
-```
+- [ ] Does it test observable behavior (outputs/state)?
+- [ ] Would it survive a refactoring that preserves behavior?
+- [ ] Does it use fakes (not mocks) for domain dependencies?
+- [ ] Is the assertion about WHAT happened, not HOW?
+- [ ] Could a stakeholder understand what's being verified?
+- [ ] Does it document a specification?

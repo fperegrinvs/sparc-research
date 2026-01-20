@@ -86,17 +86,19 @@ packages/
 Tests validate observable behavior against specifications, NOT implementation details.
 Never test that "method X called method Y" — test that "given input A, output is B".
 
-### Test Pyramid (Specification Focus)
+### Testing Shape: Diamond/Honeycomb (Integration-First)
+Modern testing emphasizes integration tests over unit tests. The pyramid is outdated.
+
 ```
-        ╱╲
-       ╱  ╲        E2E: Critical user journeys only ("money paths")
-      ╱────╲
-     ╱      ╲      BDD/Feature: Executable specifications (Gherkin)
-    ╱────────╲
-   ╱          ╲    Component: Domain logic through port interfaces (black-box)
-  ╱────────────╲
- ╱              ╲  Property: Invariants that must hold for ALL inputs
-╱────────────────╲
+        ╱╲            E2E: Critical paths only (minimize)
+       ╱──╲
+      ╱    ╲          BDD/Gherkin: Executable specifications
+     ╱──────╲
+    ╱        ╲        Integration: Test through ports
+   ╱ ════════ ╲       ← WIDEST LAYER (fakes AND real)
+  ╱            ╲      Property: Domain invariants
+ ╱──────────────╲
+╱                ╲    Unit: Complex algorithms ONLY
 ```
 
 ### Layer Guidelines

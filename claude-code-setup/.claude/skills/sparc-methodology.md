@@ -123,21 +123,23 @@ docs/
 ### Phase 4: Refinement (Specification-Driven Implementation)
 **Objective**: Implement code driven by specifications, not the other way around.
 
-**Testing Strategy** (Specification-Driven, NOT London School TDD):
+**Testing Strategy** (Integration-First, NOT London School TDD):
+
+Modern testing shapes (Trophy, Honeycomb, Diamond) emphasize integration over unit tests.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    SPECIFICATION PYRAMID                     │
+│              TESTING DIAMOND (Integration-First)             │
 │                                                              │
-│            /\                                                │
-│           /  \         E2E: Critical paths only              │
-│          /────\                                              │
-│         /      \       BDD: Executable specifications        │
-│        /────────\                                            │
-│       /          \     Black-Box: Behavior via ports         │
-│      /────────────\                                          │
-│     /              \   Property: Domain invariants           │
-│    /────────────────\                                        │
+│              ╱╲         E2E: Critical paths only             │
+│             ╱──╲                                             │
+│            ╱    ╲       BDD: Executable specifications       │
+│           ╱──────╲                                           │
+│          ╱        ╲     Integration: Test through ports      │
+│         ╱ ════════ ╲    ← WIDEST LAYER (fakes AND real)     │
+│        ╱            ╲   Property: Domain invariants          │
+│       ╱──────────────╲                                       │
+│      ╱                ╲ Unit: Complex algorithms ONLY        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
