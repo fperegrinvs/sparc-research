@@ -166,6 +166,41 @@ Feature: [Feature Name]
 - `refactor:` Code restructuring
 - `chore:` Maintenance tasks
 
+## SPARC Workflow Commands
+```bash
+# Full workflow (all phases)
+/sparc-full                    # Interactive mode with checkpoints
+/sparc-full --auto             # Autonomous mode (no pauses)
+/sparc-full --parallel         # Enable parallel backend/frontend tracks
+/sparc-full --skip-research    # Skip Phase 0 (research)
+
+# Individual phases
+/sparc-research                # Phase 0: Gather documentation/best practices
+/sparc-spec                    # Phase 1: Create specifications (BDD scenarios)
+/sparc-pseudo                  # Phase 2: Design algorithms and signatures
+/sparc-arch                    # Phase 3: Create hexagonal architecture
+/sparc-refine                  # Phase 4: Implement (specification-driven)
+/sparc-complete                # Phase 5: Review, audit, document
+```
+
+## Agents
+- `orchestrator` - Coordinates multi-agent workflows (boomerang pattern)
+- `researcher` - Gathers external knowledge for Phase 0
+- `architect` - System design, specifications, pseudocode, architecture
+- `coder` - Implementation following specifications
+- `tester` - Property tests, BDD, contract tests
+- `reviewer` - Code quality and standards review
+- `security-auditor` - Security vulnerability analysis
+
+## Skills Reference
+- `sparc-methodology` - Complete SPARC workflow guide
+- `hexagonal-architecture` - Ports & Adapters patterns
+- `tdd-workflow` - Specification-driven testing (Fakes over Mocks)
+- `bdd-testing` - Gherkin/Cucumber with executable specifications
+- `property-testing` - Domain invariants with fast-check
+- `metamorphic-testing` - Testing without oracle (for AI-generated code)
+- `arch-linting` - Architecture constraint enforcement
+
 ## Important Notes
 - NEVER commit `.env` files or secrets
 - Run `bun run lint && bun run test` before committing

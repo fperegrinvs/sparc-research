@@ -311,6 +311,37 @@ Before marking tests complete:
 - [ ] Are BDD scenarios stakeholder-readable?
 - [ ] Do tests document specifications?
 
+## Advanced Testing Techniques
+
+### Metamorphic Testing (For Oracle-Free Scenarios)
+When you can't easily determine expected output, test RELATIONSHIPS between inputs and outputs.
+
+**Use Cases**:
+- Complex algorithms (ML, optimization)
+- Search/ranking systems
+- AI-generated code validation
+
+**See**: `.claude/skills/metamorphic-testing.md` for detailed patterns.
+
+```typescript
+// Example: Metamorphic relation for search
+test('more specific query returns subset', async () => {
+  const broad = await search('shoes')
+  const specific = await search('shoes red leather')
+
+  // Every specific result should appear in broad results
+  specific.forEach(result => {
+    expect(broad).toContainEqual(result)
+  })
+})
+```
+
+## Related Skills
+- `property-testing` - Domain invariants with fast-check
+- `bdd-testing` - Gherkin/Cucumber specifications
+- `metamorphic-testing` - Testing without oracle
+- `tdd-workflow` - Specification-driven testing philosophy
+
 ## Commands
 
 ```bash

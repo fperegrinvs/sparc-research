@@ -9,6 +9,27 @@ SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) is a str
 
 ## Phases
 
+### Phase 0: Research (Optional)
+**Objective**: Gather external knowledge to inform design decisions before writing specifications.
+
+**When to Use**: Run when you need information about technologies, frameworks, best practices, or similar implementations. Skip with `--skip-research` if requirements are already clear.
+
+**Deliverables**:
+- Technology documentation summaries
+- Best practices and patterns
+- Similar implementation analysis
+- Decision rationale
+
+**Agent**: `researcher` (see `.claude/agents/researcher.md`)
+**Command**: `/sparc-research`
+
+**Actions**:
+1. Identify research topics from project brief
+2. Fetch official documentation and tutorials
+3. Search for best practices and patterns
+4. Synthesize findings into decision rationale
+5. Update memory bank with technology decisions
+
 ### Phase 1: Specification
 **Objective**: Define clear, testable requirements before any code is written.
 
@@ -204,12 +225,30 @@ Synchronization points:
 - Before Completion (integration testing)
 
 ## Commands
-- `/sparc-spec` - Run Specification phase
-- `/sparc-pseudo` - Run Pseudocode phase
-- `/sparc-arch` - Run Architecture phase
-- `/sparc-refine` - Run Refinement phase
-- `/sparc-complete` - Run Completion phase
-- `/sparc-full` - Run all phases sequentially
+- `/sparc-research` - Run Research phase (Phase 0, optional)
+- `/sparc-spec` - Run Specification phase (Phase 1)
+- `/sparc-pseudo` - Run Pseudocode phase (Phase 2)
+- `/sparc-arch` - Run Architecture phase (Phase 3)
+- `/sparc-refine` - Run Refinement phase (Phase 4)
+- `/sparc-complete` - Run Completion phase (Phase 5)
+- `/sparc-full` - Run all phases sequentially (with parallel execution support)
+
+## Agents
+- `orchestrator` - Coordinates multi-agent workflows and parallel execution
+- `researcher` - Gathers external knowledge (Phase 0)
+- `architect` - System design and architecture (Phases 1-3)
+- `coder` - Implementation (Phase 4)
+- `tester` - Testing and quality assurance (Phases 4-5)
+- `reviewer` - Code review (Phase 5)
+- `security-auditor` - Security analysis (Phase 5)
+
+## Related Skills
+- `hexagonal-architecture` - Ports & Adapters pattern implementation
+- `tdd-workflow` - Specification-driven testing (Fakes over Mocks)
+- `bdd-testing` - Gherkin/Cucumber workflow
+- `property-testing` - Domain invariants with fast-check
+- `metamorphic-testing` - Testing without oracle (AI-generated code validation)
+- `arch-linting` - Architecture constraint enforcement
 
 ## Anti-Patterns to Avoid
 

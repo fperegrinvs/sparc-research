@@ -168,3 +168,26 @@ const createUser = new CreateUserUseCase(
 3. **Open/Closed**: Extend via interfaces, not modification
 4. **Interface Segregation**: Small, focused interfaces
 5. **Dependency Inversion**: Depend on abstractions
+
+## Development Workflow: SPARC Methodology
+
+### Phases
+1. **Phase 0: Research** (optional) - Gather documentation, best practices
+2. **Phase 1: Specification** - Define requirements, BDD scenarios, domain invariants
+3. **Phase 2: Pseudocode** - Algorithm design, function signatures, test strategy
+4. **Phase 3: Architecture** - Create structure, port interfaces, fakes
+5. **Phase 4: Refinement** - Implement driven by specifications
+6. **Phase 5: Completion** - Review, audit, document
+
+### Key Principles
+- Write specifications BEFORE implementation
+- Test WHAT (behavior), not HOW (implementation)
+- Use Fakes for domain testing, Mocks only at adapter boundaries
+- Property tests define domain invariants
+- BDD scenarios are executable acceptance criteria
+
+### Commands
+- `/sparc-full` - Run complete workflow
+- `/sparc-research`, `/sparc-spec`, `/sparc-pseudo`, `/sparc-arch`, `/sparc-refine`, `/sparc-complete`
+
+See `.claude/skills/sparc-methodology.md` for detailed guidance.
