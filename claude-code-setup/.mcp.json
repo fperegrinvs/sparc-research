@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "mcpServers": {
+    "notes": {
+      "This file configures MCP servers for Claude Code": true,
+      "Add servers as needed for your project": true
+    }
+  },
+  "settings": {
+    "allowedTools": [
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash",
+      "WebFetch",
+      "Task",
+      "BatchTool"
+    ]
+  }
+}
