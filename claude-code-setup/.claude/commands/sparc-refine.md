@@ -16,6 +16,38 @@ Run after architecture to implement code driven by specifications.
 
 Tests should validate WHAT the system does (behavior), not HOW it does it (implementation).
 
+## MANDATORY: Quality Gate Enforcement
+
+**Every code change MUST pass gates before proceeding. No exceptions.**
+
+See `.claude/skills/quality-gates.md` for full details.
+
+### Gate Checkpoints
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  After EVERY Write/Edit:  bun run gate:fast                   │
+│  ──────────────────────────────────────────────────────────── │
+│  After each feature unit: bun run gate:unit                   │
+│  ──────────────────────────────────────────────────────────── │
+│  Before any commit:       bun run gate:commit                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Agent Behavior (REQUIRED)
+
+```typescript
+// After EVERY code modification
+await Write(file, content)
+await Bash('bun run gate:fast')  // MUST pass before continuing
+
+// After completing a use case or component
+await Bash('bun run gate:unit')  // MUST pass before next feature
+
+// Before committing
+await Bash('bun run gate:commit')  // MUST pass to commit
+```
+
 ## Implementation Process
 
 ### Step 1: Define Property Invariants
@@ -183,31 +215,51 @@ describe('PostgresUserRepository', () => {
 })
 ```
 
-## Order of Implementation
+## Order of Implementation (With Gates)
 
 ```
-1. Property Tests       → Define domain invariants
-2. BDD Scenarios        → Define acceptance criteria
-3. Fakes                → Create test dependencies
-4. Domain Entities      → Value objects, entities
-5. Domain Use Cases     → Business logic (through ports)
-6. Port Interfaces      → Define contracts
-7. Adapters             → HTTP, DB, external services
-8. Contract Tests       → Validate fakes match reality
-9. Integration Tests    → Test real adapters
+1. Property Tests       → Define domain invariants         → gate:fast
+2. BDD Scenarios        → Define acceptance criteria       → gate:fast
+3. Fakes                → Create test dependencies         → gate:fast + gate:unit
+4. Domain Entities      → Value objects, entities          → gate:fast
+5. Domain Use Cases     → Business logic (through ports)   → gate:fast + gate:unit
+6. Port Interfaces      → Define contracts                 → gate:fast
+7. Adapters             → HTTP, DB, external services      → gate:fast + gate:unit
+8. Contract Tests       → Validate fakes match reality     → gate:fast + gate:unit
+9. Integration Tests    → Test real adapters               → gate:commit
 ```
 
-## Quality Gates
+**Gate enforcement is not optional.** If a gate fails, fix it before proceeding.
 
-Before committing:
-- [ ] Property tests pass (invariants hold)
-- [ ] BDD scenarios pass (acceptance met)
-- [ ] Unit tests pass (behavior verified)
-- [ ] Contract tests pass (fakes validated)
-- [ ] No linting errors
-- [ ] Type check passes
-- [ ] File size limits respected (< 500 lines)
-- [ ] Function size limits respected (< 50 lines)
+## Quality Gates (AUTOMATED - NOT A CHECKLIST)
+
+Gates are **automatically enforced**, not manually checked.
+
+### After Every Code Change
+```bash
+bun run gate:fast  # TypeScript + ESLint (< 10 seconds)
+```
+
+### After Each Feature Unit
+```bash
+bun run gate:unit  # gate:fast + unit tests + property tests
+```
+
+### Before Every Commit
+```bash
+bun run gate:commit  # gate:unit + contracts + BDD + arch tests
+```
+
+### What Gates Check
+- TypeScript compilation (strict mode)
+- ESLint rules (no warnings allowed)
+- Architecture constraints (no domain→adapter imports)
+- Property tests (domain invariants)
+- Unit tests (behavior through ports)
+- Contract tests (fakes match real)
+- BDD scenarios (acceptance criteria)
+- File size limits (< 500 lines)
+- Function size limits (< 50 lines)
 
 ## Anti-Patterns to Avoid
 

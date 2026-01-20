@@ -25,6 +25,23 @@ Phase 5: Completion              → /sparc-complete
 - `--auto` - Run without human checkpoints (autonomous mode)
 - `--parallel` - Enable parallel execution for Phase 4
 
+## MANDATORY: Quality Gate Enforcement
+
+**Gates run automatically at every checkpoint. Cannot be bypassed.**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  GATE LEVELS (enforced throughout workflow)                    │
+├─────────────────────────────────────────────────────────────────┤
+│  gate:fast    → After EVERY code change (< 10s)               │
+│  gate:unit    → After each feature unit completion            │
+│  gate:commit  → Before EVERY commit (blocks on failure)       │
+│  gate:full    → Before PR/merge (runs in CI)                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+See `.claude/skills/quality-gates.md` for implementation details.
+
 ## Execution Flow
 
 ### Phase 0: Research (Optional)
@@ -80,7 +97,11 @@ Phase 5: Completion              → /sparc-complete
 - Create domain logic and adapters
 - Write contract tests (fake vs real)
 - **Output**: Implementation code, tests
-- **Checkpoint**: All tests passing
+- **Gate Enforcement**:
+  - `gate:fast` after EVERY Write/Edit
+  - `gate:unit` after each use case/component
+  - `gate:commit` before any commit
+- **Checkpoint**: All tests passing (verified by gates)
 
 ### Phase 5: Completion
 **Agents**: `tester`, `reviewer`, `security-auditor`
@@ -91,7 +112,8 @@ Phase 5: Completion              → /sparc-complete
 - Security audit
 - Generate documentation
 - **Output**: Verified, documented, deployable code
-- **Final checkpoint**: Ready for deployment
+- **Gate Enforcement**: `gate:full` MUST pass
+- **Final checkpoint**: Ready for deployment (verified by CI)
 
 ## Parallel Execution (Boomerang Pattern)
 

@@ -194,12 +194,26 @@ Feature: [Feature Name]
 
 ## Skills Reference
 - `sparc-methodology` - Complete SPARC workflow guide
+- `quality-gates` - **Mandatory** automated verification at every checkpoint
 - `hexagonal-architecture` - Ports & Adapters patterns
 - `tdd-workflow` - Specification-driven testing (Fakes over Mocks)
 - `bdd-testing` - Gherkin/Cucumber with executable specifications
 - `property-testing` - Domain invariants with fast-check
 - `metamorphic-testing` - Testing without oracle (for AI-generated code)
 - `arch-linting` - Architecture constraint enforcement
+
+## Quality Gates (MANDATORY)
+
+Gates run automatically and MUST pass before proceeding:
+
+```bash
+bun run gate:fast    # After EVERY code change (< 10s)
+bun run gate:unit    # After each feature unit
+bun run gate:commit  # Before EVERY commit (enforced by pre-commit hook)
+bun run gate:full    # Before PR/merge (enforced by CI)
+```
+
+**No workarounds. No skipping. Gates are the specification.**
 
 ## Important Notes
 - NEVER commit `.env` files or secrets
